@@ -2,11 +2,17 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
+
 {
+    //Creates an observer pattern for the health bar to listen for changes in the player's health
+    public event System.Action<int, int> OnHealthChanged;
+
     [Header("Health")]
     public int maxHealth = 100;
 
     private int currentHealth;
+
+    //Checks if the player is dead or not, and allows other scripts to access this information
     public bool IsDead { get; private set; } = false;
 
     [Header("Health Bar")]
@@ -17,13 +23,10 @@ public class PlayerHealth : MonoBehaviour
 
     void Start()
     {
-        currentHealth = maxHealth;
+            currentHealth = maxHealth;
 
-        if (healthBar != null)
-        {
-            healthBar.maxValue = maxHealth;
-            healthBar.value = currentHealth;
-        }
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        
     }
 
     public void TakeDamage(int damage)
@@ -32,12 +35,10 @@ public class PlayerHealth : MonoBehaviour
 
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
-        Debug.Log("Player took " + damage + " damage!");
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
-        if (healthBar != null)
-        {
-            healthBar.value = currentHealth;
-        }
+        //debug
+        Debug.Log("Player took " + damage + " damage!");
 
         if (currentHealth <= 0)
         {
@@ -47,6 +48,7 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
+        //Script to handle player death
         IsDead = true;
 
         Debug.Log("Player died!");
