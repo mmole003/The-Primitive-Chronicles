@@ -12,6 +12,8 @@ public class PlayerHealth : MonoBehaviour
 
     private int currentHealth;
 
+    public int CurrentHealth => currentHealth;
+
     //Checks if the player is dead or not, and allows other scripts to access this information
     public bool IsDead { get; private set; } = false;
 
