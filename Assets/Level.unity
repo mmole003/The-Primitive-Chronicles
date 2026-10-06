@@ -7221,6 +7221,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9f50d4608db0f58458384667df0c3b6f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1056780710}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9f50d4608db0f58458384667df0c3b6f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1056780712}
   m_SourcePrefab: {fileID: 100100000, guid: 9f50d4608db0f58458384667df0c3b6f, type: 3}
 --- !u!1 &508380995
 GameObject:
@@ -20395,6 +20398,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerActivityTracker
   idleTime: 60
+--- !u!114 &1056780712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1056780704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b32f607611545e45930fe33455bb462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDamageFlash
+  flashDuration: 0.15
 --- !u!1 &1066146891
 GameObject:
   m_ObjectHideFlags: 0
@@ -20430,8 +20446,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 118.9, y: 6.5399933}
-  m_SizeDelta: {x: 200, y: 49}
+  m_AnchoredPosition: {x: 121.2, y: 81.7}
+  m_SizeDelta: {x: 209.68, y: -41.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1066146893
 MonoBehaviour:
@@ -20493,8 +20509,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 50
+  m_fontSizeBase: 50
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
