@@ -1,6 +1,6 @@
 using UnityEngine;
 using System;
-using UnityEngine;
+
 
 public class GemManager : MonoBehaviour
 {

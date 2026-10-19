@@ -1,145 +1,203 @@
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Moves forward/backward and rotates with WASD/Arrow keys and mouse look.
-/// </summary>
+[RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
-    [Tooltip("Forward/back speed (units/sec).")]
-    public float speed = 5.0f;
+    public enum PlayerState
+    {
+        Idle,
+        Walking,
+        Attacking,
+        Dead
+    }
 
-    [Tooltip("Turn speed (degrees/sec) from keyboard input.")]
+    [Header("Movement")]
+    public float speed = 5.0f;
     public float rotationSpeed = 120.0f;
 
-    [Tooltip("Mouse sensitivity (degrees per pixel).")]
+    [Header("Mouse Look")]
     public float mouseSensitivity = 0.15f;
-
-    [Tooltip("Minimum camera pitch (degrees).")]
-    public float pitchMin = -80f;
-
-    [Tooltip("Maximum camera pitch (degrees).")]
-    public float pitchMax = 80f;
-
-    [Tooltip("Invert vertical look.")]
-    public bool invertY = false;
-
-    public float jumpForce = 5.0f;
-    public float groundCheckDistance = 0.6f; // adjust to fit your collider/scale
-
-    // Assign the camera (or camera parent pivot) here in inspector.
     public Transform cameraTransform;
+    public float fixedCameraPitch = 45f;
+
+    [Header("State Machine References")]
+    public SwordAttack swordAttack;
+    public PlayerHealth playerHealth;
+
+    public PlayerState State { get; private set; } = PlayerState.Idle;
 
     private Rigidbody rb;
-    private bool jumpRequested = false;
-
-    // Internal rotation state (degrees)
-    private float pitch = 0f;
     private float yaw = 0f;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        if (rb == null) Debug.LogWarning("PlayerController needs a Rigidbody.");
-        else
-        {
-            // Prevent tipping while allowing yaw rotation
-            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-            rb.interpolation = RigidbodyInterpolation.Interpolate;
-            rb.angularDamping = Mathf.Max(rb.angularDamping, 2f);
-        }
 
-        // initialize yaw from current transform
+        rb.constraints =
+            RigidbodyConstraints.FreezeRotationX |
+            RigidbodyConstraints.FreezeRotationZ;
+
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        rb.angularDamping = Mathf.Max(rb.angularDamping, 2f);
+
+        // Find references automatically if they are not assigned.
+        if (swordAttack == null)
+            swordAttack = GetComponentInChildren<SwordAttack>();
+
+        if (playerHealth == null)
+            playerHealth = GetComponent<PlayerHealth>();
+
+        if (playerHealth == null)
+            playerHealth = GetComponentInChildren<PlayerHealth>();
+
+        if (playerHealth == null)
+            Debug.LogWarning("PlayerController: PlayerHealth was not found.");
+
+        if (swordAttack == null)
+            Debug.LogWarning("PlayerController: SwordAttack was not found.");
+
         yaw = transform.eulerAngles.y;
 
-        // initialize pitch from camera local rotation if available
+        // Set the camera to its fixed downward angle.
         if (cameraTransform != null)
-            pitch = cameraTransform.localEulerAngles.x > 180f ? cameraTransform.localEulerAngles.x - 360f : cameraTransform.localEulerAngles.x;
+        {
+            cameraTransform.localRotation =
+                Quaternion.Euler(fixedCameraPitch, 0f, 0f);
+        }
 
-        // lock cursor for FPS-like control (optional)
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
     private void Update()
     {
-        // Mouse look (read in Update for smoothness)
+        // Death always takes priority over every other state.
+        if (playerHealth != null && playerHealth.IsDead)
+        {
+            SwitchTo(PlayerState.Dead);
+            return;
+        }
+
+        if (State == PlayerState.Dead)
+            return;
+
+        // Mouse movement rotates the player horizontally only.
         if (Mouse.current != null)
         {
             Vector2 mouseDelta = Mouse.current.delta.ReadValue();
-            float yDelta = mouseDelta.y * mouseSensitivity;
+
             float xDelta = mouseDelta.x * mouseSensitivity;
-
             yaw += xDelta;
-            pitch += (invertY ? yDelta : -yDelta);
-
-            // Clamp pitch so camera cannot loop/flip
-            pitch = Mathf.Clamp(pitch, pitchMin, pitchMax);
         }
 
-        // Request jump from Update (input) so physics is handled in FixedUpdate
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        UpdateState();
+    }
+
+    private void UpdateState()
+    {
+        // An active sword swing takes priority over Idle and Walking.
+        if (swordAttack != null && swordAttack.IsAttacking)
         {
-            if (IsGrounded())
-                jumpRequested = true;
+            SwitchTo(PlayerState.Attacking);
+            return;
+        }
+
+        // Only forward/backward input counts as walking.
+        // A/D can still rotate the player while Idle.
+        if (IsWalkingInputPressed())
+        {
+            SwitchTo(PlayerState.Walking);
+        }
+        else
+        {
+            SwitchTo(PlayerState.Idle);
         }
     }
 
     private void FixedUpdate()
     {
+        if (State == PlayerState.Dead)
+            return;
+
+        Keyboard keyboard = Keyboard.current;
         Vector2 moveInput = Vector2.zero;
 
-        // Forward/backward
-        if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) moveInput.y = 1f;
-        if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) moveInput.y = -1f;
-
-        // Left/right (keyboard rotation)
-        if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveInput.x = -1f;
-        if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveInput.x = 1f;
-
-        // Apply jump (physics) if requested
-        if (jumpRequested && rb != null)
+        if (keyboard != null)
         {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
-            jumpRequested = false;
+            if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed)
+                moveInput.y = 1f;
+
+            if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed)
+                moveInput.y = -1f;
+
+            if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed)
+                moveInput.x = -1f;
+
+            if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed)
+                moveInput.x = 1f;
         }
 
-        // Move in facing direction 
-        Vector3 movement = transform.forward * moveInput.y * speed * Time.fixedDeltaTime;
-        if (rb != null) rb.MovePosition(rb.position + movement);
+        // Move forward and backward relative to the player.
+        Vector3 movement =
+            transform.forward * moveInput.y * speed * Time.fixedDeltaTime;
 
-        // Keyboard turn (additive to mouse yaw)
+        rb.MovePosition(rb.position + movement);
+
+        // Preserve the original keyboard turning behavior.
         float turnDirection = moveInput.x;
+
         if (moveInput.y < 0)
             turnDirection = -turnDirection;
 
-        float keyboardTurnDegrees = turnDirection * rotationSpeed * Time.fixedDeltaTime;
+        float keyboardTurnDegrees =
+            turnDirection * rotationSpeed * Time.fixedDeltaTime;
+
         yaw += keyboardTurnDegrees;
 
-        // Apply yaw to Rigidbody rotation (keeps physics)
-        if (rb != null)
-        {
-            Quaternion targetRotation = Quaternion.Euler(0f, yaw, 0f);
-            rb.MoveRotation(targetRotation);
-        }
-        else
-        {
-            transform.rotation = Quaternion.Euler(0f, yaw, 0f);
-        }
+        Quaternion targetRotation = Quaternion.Euler(0f, yaw, 0f);
+        rb.MoveRotation(targetRotation);
     }
 
     private void LateUpdate()
     {
-        // Apply pitch to camera in LateUpdate so it uses final player rotation this frame
+        if (State == PlayerState.Dead)
+            return;
+
+        // Keep the camera at a constant downward angle.
         if (cameraTransform != null)
         {
-            cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+            cameraTransform.localRotation =
+                Quaternion.Euler(fixedCameraPitch, 0f, 0f);
         }
     }
 
-    private bool IsGrounded()
+    private void SwitchTo(PlayerState nextState)
     {
-        // Simple downward raycast to check if player is near the ground.
-        return Physics.Raycast(transform.position, Vector3.down, groundCheckDistance);
+        if (State == nextState)
+            return;
+
+        State = nextState;
+        Debug.Log("Player state changed to: " + State);
+
+        if (State == PlayerState.Dead)
+        {
+            if (swordAttack != null)
+                swordAttack.CancelAttack();
+        }
+    }
+
+    private bool IsWalkingInputPressed()
+    {
+        Keyboard keyboard = Keyboard.current;
+
+        if (keyboard == null)
+            return false;
+
+        return keyboard.wKey.isPressed ||
+               keyboard.upArrowKey.isPressed ||
+               keyboard.sKey.isPressed ||
+               keyboard.downArrowKey.isPressed;
     }
 }

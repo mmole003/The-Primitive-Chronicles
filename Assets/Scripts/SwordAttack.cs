@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,7 +15,10 @@ public class SwordAttack : MonoBehaviour
     public Collider swordHitbox;
 
     private bool isAttacking = false;
+    public bool IsAttacking => isAttacking;
+
     private Quaternion startingRotation;
+    private Coroutine swingRoutine;
 
     private HashSet<GameObject> hitEnemies = new HashSet<GameObject>();
 
@@ -34,21 +38,25 @@ public class SwordAttack : MonoBehaviour
 
     void Update()
     {
-        // Left mouse button
         if (Mouse.current != null &&
             Mouse.current.leftButton.wasPressedThisFrame &&
             !isAttacking)
         {
-            StartCoroutine(SwingSword());
+            swingRoutine = StartCoroutine(SwingSword());
         }
     }
 
     IEnumerator SwingSword()
     {
+        if (swordHitbox == null)
+        {
+            isAttacking = false;
+            swingRoutine = null;
+            yield break;
+        }
+
         isAttacking = true;
-
         hitEnemies.Clear();
-
         swordHitbox.enabled = true;
 
         float elapsed = 0f;
@@ -72,16 +80,36 @@ public class SwordAttack : MonoBehaviour
             yield return null;
         }
 
+        FinishAttack();
+    }
+
+    private void FinishAttack()
+    {
         transform.localRotation = startingRotation;
 
-        swordHitbox.enabled = false;
+        if (swordHitbox != null)
+        {
+            swordHitbox.enabled = false;
+        }
 
         isAttacking = false;
+        swingRoutine = null;
+    }
+
+    public void CancelAttack()
+    {
+        if (swingRoutine != null)
+        {
+            StopCoroutine(swingRoutine);
+            swingRoutine = null;
+        }
+
+        FinishAttack();
     }
 
     public void DamageEnemy(GameObject enemy)
     {
-        if (hitEnemies.Contains(enemy))
+        if (enemy == null || hitEnemies.Contains(enemy))
             return;
 
         hitEnemies.Add(enemy);

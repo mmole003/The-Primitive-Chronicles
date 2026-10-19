@@ -20304,7 +20304,7 @@ MonoBehaviour:
   invertY: 0
   jumpForce: 6
   groundCheckDistance: 0.6
-  cameraTransform: {fileID: 0}
+  cameraTransform: {fileID: 330585546}
 --- !u!4 &1056780706 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 9f50d4608db0f58458384667df0c3b6f, type: 3}
