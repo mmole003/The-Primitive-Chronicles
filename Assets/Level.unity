@@ -20299,12 +20299,10 @@ MonoBehaviour:
   speed: 5
   rotationSpeed: 120
   mouseSensitivity: 0.15
-  pitchMin: -80
-  pitchMax: 80
-  invertY: 0
-  jumpForce: 6
-  groundCheckDistance: 0.6
   cameraTransform: {fileID: 330585546}
+  fixedCameraPitch: 45
+  swordAttack: {fileID: 1505725797}
+  playerHealth: {fileID: 1056780709}
 --- !u!4 &1056780706 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 9f50d4608db0f58458384667df0c3b6f, type: 3}
