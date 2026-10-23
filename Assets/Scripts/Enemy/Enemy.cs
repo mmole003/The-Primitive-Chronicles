@@ -7,6 +7,7 @@ public class Enemy : MonoBehaviour
     private StateMachine stateMachine;
     private NavMeshAgent agent;
     private GameObject player;
+    private Vector3 lastKnowPos;
     public NavMeshAgent Agent { get => agent; }
     public GameObject Player { get => player; }
 
@@ -15,7 +16,10 @@ public class Enemy : MonoBehaviour
     public float sightDistance = 20f;
     public float fieldOfView = 85f;
     public float eyeHeight;
-    
+
+    public Vector3 LastKnownPlayerPosition { get => lastKnowPos; set => lastKnowPos = value; }
+
+
 
     //For debugging purposes
     [SerializeField]
@@ -32,7 +36,11 @@ public class Enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CanSeePlayer();
+        if (CanSeePlayer())
+        {
+            LastKnownPlayerPosition = player.transform.position;
+        }
+
         currentState = stateMachine.activeState.ToString();
     }
 

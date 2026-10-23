@@ -54,10 +54,9 @@ public class AttackState : BaseState
         {
             enemy.Agent.isStopped = false;
             losePlayerTimer += Time.deltaTime;
-            if (losePlayerTimer > 8f)
+            if (losePlayerTimer > 3f)
             {
-                // Lost the player -> go back to patrol
-                stateMachine.ChangeState(new PatrolState());
+                stateMachine.ChangeState(new SearchState());
             }
         }
     }
