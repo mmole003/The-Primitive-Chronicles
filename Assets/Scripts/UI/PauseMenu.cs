@@ -124,4 +124,16 @@ public class PauseMenu : MonoBehaviour
 
         Application.Quit();
     }
+
+    public void ShowMenu()
+    {
+        if (pauseMenu != null)
+            pauseMenu.style.display = DisplayStyle.Flex;
+    }
+
+    public void HideMenu()
+    {
+        if (pauseMenu != null)
+            pauseMenu.style.display = DisplayStyle.None;
+    }
 }

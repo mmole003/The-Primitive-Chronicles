@@ -50,16 +50,10 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        //Script to handle player death
         IsDead = true;
-
         Debug.Log("Player died!");
 
-        if (gameOver != null)
-        {
-            gameOver.ShowGameOver();
-        }
-
-        Time.timeScale = 0f;
+        if (GameManager.Instance != null)
+            GameManager.Instance.TriggerGameOver();
     }
 }

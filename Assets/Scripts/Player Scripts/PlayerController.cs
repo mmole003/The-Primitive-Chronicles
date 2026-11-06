@@ -73,6 +73,11 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (GameManager.Instance != null &&
+    GameManager.Instance.CurrentState != GameManager.GameState.Playing)
+        {
+            return;
+        }
         // Death always takes priority over every other state.
         if (playerHealth != null && playerHealth.IsDead)
         {

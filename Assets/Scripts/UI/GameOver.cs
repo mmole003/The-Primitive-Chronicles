@@ -57,4 +57,10 @@ public class GameOver : MonoBehaviour
     {
         Application.Quit();
     }
+
+    public void HideMenu()
+    {
+        if (uiDocument != null)
+            uiDocument.rootVisualElement.style.display = DisplayStyle.None;
+    }
 }

@@ -38,6 +38,12 @@ public class SwordAttack : MonoBehaviour
 
     void Update()
     {
+
+        if (GameManager.Instance != null &&
+    GameManager.Instance.CurrentState != GameManager.GameState.Playing)
+        {
+            return;
+        }
         if (Mouse.current != null &&
             Mouse.current.leftButton.wasPressedThisFrame &&
             !isAttacking)
